@@ -26,7 +26,7 @@ or
 # How to install
         $ git clone https://github.com/ang1337/umd.git
         $ cd umd
-        $ make
+        $ make install
 # How to uninstall
         $ cd umd
         $ make clean
