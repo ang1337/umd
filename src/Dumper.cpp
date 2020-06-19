@@ -21,10 +21,10 @@ using namespace std::chrono;
 
 /* this constructor is called in attach mode */
 Dumper::Dumper(const pid_t pid) : target_pid(pid), 
-                            page_size(getpagesize()), 
-                            total_bytes(0),
-                            proc_mem_fd(0),
-                            inspector(nullptr) { // constructor
+                                  page_size(getpagesize()), 
+                                  total_bytes(0),
+                                  proc_mem_fd(0),
+                                  inspector(nullptr) { // constructor
     /* open all the required procfs entries */
     std::string procfs_maps_path { "/proc/" + std::to_string(target_pid) + "/maps" },
                 procfs_mem_path { "/proc/" + std::to_string(target_pid) + "/mem" };
@@ -38,7 +38,7 @@ Dumper::Dumper(const pid_t pid) : target_pid(pid),
             close(proc_mem_fd);
         } else if (proc_maps_istream && (proc_mem_fd < 3)) {
             std::cerr << procfs_mem_path << " opening failure" 
-                      << "\nRun as root if you want to use attach mode" << std::endl;
+                      << "\nTry to run the umd as root" << std::endl;
             proc_maps_istream.close();
         } else {
             std::cerr << procfs_maps_path << " and" << procfs_mem_path << " opening failure" << std::endl;

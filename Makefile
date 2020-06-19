@@ -1,10 +1,11 @@
 COMP = clang++
 
-ifndef COMP
-	COMP = g++
-	ifndef COMP
-		$(error No suitable compiler is available. Download either clang (recommended) or gcc)
-	endif
+ifeq (, $(shell which clang))
+COMP = g++
+endif
+
+ifeq (, $(shell which gcc))
+	$(error No suitable compiler is available. Download either clang or gcc)
 endif
 
 BINNAME = umd
@@ -16,7 +17,7 @@ CXX17 = -std=c++17
 CXXSTD = -lstdc++
 THREADLIB = -pthread
 
-all:
+install:
 	$(COMP) ./src/*.cpp $(COMPFLAGS) $(BINNAME)
 	$(info Relocating the $(BINNAME) binary to the PATH...)
 	sudo mv $(BINNAME) /usr/local/bin

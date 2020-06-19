@@ -19,11 +19,8 @@ bool input_validation::is_positive_number(const std::string &s) {
 /* main arguments validation routine */
 bool input_validation::validate_args(char** const argv) {
     if (!strcmp(argv[2], "-i") || !strcmp(argv[2], "--inspect")) {
-        if (!is_binary(argv[1]) && is_binary(argv[3])) {
-            return true;
-        }
-        return false;
-    }
+        return !is_binary(argv[1]) && is_binary(argv[3]);
+    } 
     const std::string dump_dir { argv[1] };
     if (!std::filesystem::exists(dump_dir)) {
         std::filesystem::create_directory(dump_dir);
