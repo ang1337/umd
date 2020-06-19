@@ -24,7 +24,7 @@ or
 
         $ umd /path/to/memory/layout -i /path/to/dump
 # How to install
-        $ git clone https://github.com/ang1337/umd
+        $ git clone https://github.com/ang1337/umd.git
         $ cd umd
         $ make
 # How to uninstall
