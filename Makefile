@@ -5,7 +5,7 @@ COMP = g++
 endif
 
 ifeq (, $(shell which gcc))
-	$(error No suitable compiler is available. Download either clang or gcc)
+$(error No suitable compiler is available. Download either clang or gcc)
 endif
 
 BINNAME = umd
