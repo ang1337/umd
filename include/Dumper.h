@@ -12,10 +12,10 @@ class Inspector;
 
 struct AddressRangeInfo {
     std::pair<std::uint64_t, std::uint64_t> pages_rng;
+    std::uint64_t mapped_rng_start_offset,
+                  mapped_rng_end_offset;
     std::string rng_permissions;
     unsigned page_cnt;
-    std::uint64_t mapped_rng_start_offset,
-             mapped_rng_end_offset;
 };
 
 class Dumper {
@@ -29,23 +29,25 @@ class Dumper {
         bool is_in_range(const std::uint64_t, const std::size_t) noexcept; 
         Inspector* get_inspector_obj() const noexcept;
     private:
+        std::vector<std::uint8_t> memory;
+        std::vector<AddressRangeInfo> page_addr_ranges_info;
         /* first - the address of the first page of contiguous memory chunk in layout
          * second - the amount of pages in contiguous memory chunk */
         std::vector<std::pair<std::uint64_t, std::size_t>> contiguous_pages_blocks;
+        std::string proc_maps_state_output;
+        std::ifstream proc_maps_istream,
+                      dump_istream;
+        std::atomic<std::uint64_t> total_bytes;
+        Inspector* inspector;
         const pid_t target_pid;
         const int page_size;
         int proc_mem_fd;
-        std::ifstream proc_maps_istream,
-                      dump_istream;
-        std::vector<AddressRangeInfo> page_addr_ranges_info;
-        std::string proc_maps_state_output;
+        bool is_single_process;
         void accumulate_mem_dump(const std::uint64_t, const std::size_t, const std::size_t) noexcept;
         void thread_dump_memory_block(unsigned long, const unsigned long) noexcept;
         void mt_dump_memory(std::vector<std::thread>&, const unsigned long, unsigned long, unsigned long) noexcept;
-        std::vector<std::uint8_t> memory;
         AddressRangeInfo extract_address_range_info(const std::string& line) noexcept;
         std::pair<std::string, std::string> dump_to_disk(const pid_t, const std::string&) noexcept;
         void get_memory_layout(bool = false) noexcept;
-        Inspector* inspector;
-        std::atomic<std::uint64_t> total_bytes;
+        void evaluate_priority() noexcept;
 };

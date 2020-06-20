@@ -24,8 +24,8 @@ Dumper::Dumper(const pid_t pid) : target_pid(pid),
                                   page_size(getpagesize()), 
                                   total_bytes(0),
                                   proc_mem_fd(0),
-                                  inspector(nullptr) { // constructor
-    /* open all the required procfs entries */
+                                  inspector(nullptr) { 
+    /* open all required procfs entries */
     std::string procfs_maps_path { "/proc/" + std::to_string(target_pid) + "/maps" },
                 procfs_mem_path { "/proc/" + std::to_string(target_pid) + "/mem" };
     proc_maps_istream.open(procfs_maps_path.c_str());
@@ -38,7 +38,7 @@ Dumper::Dumper(const pid_t pid) : target_pid(pid),
             close(proc_mem_fd);
         } else if (proc_maps_istream && (proc_mem_fd < 3)) {
             std::cerr << procfs_mem_path << " opening failure" 
-                      << "\nTry to run the umd as root" << std::endl;
+                      << "\nTry to run umd as root" << std::endl;
             proc_maps_istream.close();
         } else {
             std::cerr << procfs_maps_path << " and" << procfs_mem_path << " opening failure" << std::endl;
@@ -46,6 +46,7 @@ Dumper::Dumper(const pid_t pid) : target_pid(pid),
         ptrace(PTRACE_DETACH, target_pid, nullptr, nullptr);
         exit(EXIT_FAILURE);
     }
+    evaluate_priority();
     get_memory_layout();
 }
 
@@ -59,8 +60,7 @@ Dumper::Dumper(const std::string &path_to_memory_layout, const std::string &path
         std::cerr << "ERROR : procfs file opening failure\n" << std::endl;
         exit(EXIT_FAILURE);
     }
-    /* Lower nice number is set for performance reasons */
-    setpriority(PRIO_PROCESS, getpid(), -20);
+    evaluate_priority();
     get_memory_layout(true);
     std::cout << "Loading the " << path_to_dump << " from the disk to the buffer..." 
               << "\nMemory dump size : " << memory.size() << " bytes"
@@ -71,12 +71,18 @@ Dumper::Dumper(const std::string &path_to_memory_layout, const std::string &path
               << std::endl;
     auto start { high_resolution_clock::now() };
     dump_istream.read(reinterpret_cast<char*>(memory.data()), memory.size());
+    if (!dump_istream) {
+        std::cerr << "WARNING : not all bytes were written from disk to buffer\n" 
+                  << dump_istream.gcount() << " were written to the memory dump buffer" << std::endl;
+    }
     auto stop { high_resolution_clock::now() };
     auto time_elapsed { duration_cast<duration<double>>(stop - start) };
     std::cout << "Time elapsed : " << time_elapsed.count() 
               << " seconds (loading memory dump from the disk to the buffer)" << std::endl;
-    /* Reset the nice number back to default */
-    setpriority(PRIO_PROCESS, getpid(), 0);
+    if (is_single_process) {
+        std::cout << "Resetting umd priority to default..." << std::endl;
+        setpriority(PRIO_PROCESS, getpid(), 0);
+    }
 }
 
 Dumper::~Dumper() { 
@@ -94,7 +100,28 @@ Dumper::~Dumper() {
         inspector = nullptr;
     }
 }
- 
+
+/* this method evaluates the optimal execution priority for umd */
+void Dumper::evaluate_priority() noexcept {
+    char choice {};
+    std::cout << "WARNING : dumping multiple processes may significantly slow down the dumping speed" << std::endl;
+    do {
+        std::cout << "Are you dumping/inspecting multiple processes from multiple terminal sessions? (y/n) -> ";
+        std::cin >> choice;
+        if (choice == 'y') {
+            is_single_process = false;
+        } else if (choice == 'n') {
+            is_single_process = true;
+            std::cout << "Elevating umd priority..." << std::endl;
+            if ((setpriority(PRIO_PROCESS, getpid(), -20)) == -1) {
+                std::cerr << "ERROR : Nice number has not been changed" << std::endl;
+            }
+        } else {
+            std::cerr << "Invalid choice!" << std::endl;
+        }
+    } while (choice != 'y' && choice != 'n');
+}
+
 const std::vector<std::uint8_t>& Dumper::get_memory_dump() const noexcept {
     return memory;
 }
@@ -119,10 +146,10 @@ AddressRangeInfo Dumper::extract_address_range_info(const std::string& line) noe
                                                     std::stoull(end_adrr, nullptr, 16) };
     auto page_amount { (curr_addr_range.second - curr_addr_range.first) / page_size };
     return { {curr_addr_range},
-             {rng_permissions},
-             static_cast<unsigned>(page_amount),
              0,
-             0 };
+             0,
+             {rng_permissions},
+             static_cast<unsigned>(page_amount)}; 
 }
 
 Inspector* Dumper::get_inspector_obj() const noexcept {
@@ -155,7 +182,7 @@ bool Dumper::is_in_range(const std::uint64_t address, const std::size_t code_siz
 /* this method reads the entire /proc/pid/maps interface and fills the AddressRangeInfo vector */
 void Dumper::get_memory_layout(bool inspect_mode) noexcept {
     std::string line {};
-        /* get the first line */
+    /* get the first line */
     std::getline(proc_maps_istream, line);
     /* gets the virtual page range metadata */
     auto curr_addr_range_info { extract_address_range_info(line) };
@@ -187,6 +214,10 @@ void Dumper::get_memory_layout(bool inspect_mode) noexcept {
     /* inspector object will be destroyed in class Dumper destructor */
     if (!inspector) {
         inspector = new Inspector(page_addr_ranges_info);
+        if (!inspector) {
+            std::cerr << "Object heap memory allocation failure" << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
     /* maps the virtual addresses to vector offsets */
     inspector->map_address_space();
@@ -279,8 +310,6 @@ void Dumper::dump_memory(const pid_t target_pid, const std::string &dump_dir) no
                   dump_from_idx {},
                   dump_to_idx { cells_per_thread };
     std::cout << "Threads created for memory dumping : " << thread_cnt << std::endl;
-    /* sets to lowest nice number for a dumping phase for performance reasons */
-    setpriority(PRIO_PROCESS, getpid(), -20);
     auto start { high_resolution_clock::now() };
     mt_dump_memory(dump_threads, cells_per_thread, dump_from_idx, dump_to_idx);
     /* handles the situation when the amount of contiguous memory blocks is not divisible by the amount of threads */
@@ -305,8 +334,13 @@ void Dumper::dump_memory(const pid_t target_pid, const std::string &dump_dir) no
               << " / " << std::setprecision(6) << static_cast<float>(total_bytes) / 1000000000.f << " gigabytes" 
               << std::endl;
     auto output_files { dump_to_disk(target_pid, dump_dir) };
-    /* reset the nice number back to the default */
-    setpriority(PRIO_PROCESS, getpid(), 0);
+    /* if nice number has been changed, reset the nice number back to the default */
+    if (is_single_process) {
+        std::cout << "Resetting umd priority to default..." << std::endl;
+        if((setpriority(PRIO_PROCESS, getpid(), 0)) == -1) {
+            std::cerr << "ERROR : Nice number has not been changed" << std::endl;
+        }
+    }
     std::cout << "The process memory has been successfully saved in " << dump_dir 
               << "\nCheck '" << output_files.first 
               << "' and the corresponding '" << output_files.second 

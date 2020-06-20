@@ -21,7 +21,7 @@ void Inspector::map_address_space() noexcept {
     }
 }
 
-/* returns appropriate offset inside the memory dump buffer according to the provided valid virtual address */
+/* returns an appropriate offset inside the memory dump buffer according to the provided valid virtual address */
 std::uint64_t Inspector::get_offset(const std::uint64_t address) const noexcept {
     ssize_t low_idx {}, high_idx { static_cast<ssize_t>(proc_maps_info.size() - 1) };
     while (low_idx <= high_idx) {
