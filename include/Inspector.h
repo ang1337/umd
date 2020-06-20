@@ -10,7 +10,6 @@ class Inspector {
         ~Inspector() = default;
         void map_address_space() noexcept;
         std::uint64_t get_offset(const std::uint64_t) const noexcept;
-        std::vector<std::uint8_t> read_memory(const std::vector<std::uint8_t>&, const std::uint64_t, const std::uint64_t) const noexcept;
         std::uint16_t check_machine_type(const std::vector<std::uint8_t>&) const noexcept;
     private:
         std::vector<AddressRangeInfo> &proc_maps_info;

@@ -26,7 +26,7 @@ class Dumper {
         void dump_memory(const pid_t, const std::string&) noexcept;
         const std::vector<std::uint8_t>& get_memory_dump() const noexcept;
         const std::vector<AddressRangeInfo>& get_addr_range_info() const noexcept;
-        bool is_in_range(const std::uint64_t, const std::size_t) noexcept; 
+        bool is_in_range(const std::uint64_t, const std::size_t) const noexcept; 
         Inspector* get_inspector_obj() const noexcept;
     private:
         std::vector<std::uint8_t> memory;

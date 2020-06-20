@@ -42,15 +42,6 @@ std::uint64_t Inspector::get_offset(const std::uint64_t address) const noexcept 
     return 0; // technically unreachable
 }
 
-/* extracts a memory chunk from the dump */
-std::vector<std::uint8_t> Inspector::read_memory(const std::vector<std::uint8_t>& memory, 
-                                                 const std::uint64_t offset, 
-                                                 const std::uint64_t size) const noexcept { 
-    std::vector<std::uint8_t> read_memory_chunk { memory.begin() + offset, 
-                                                  memory.begin() + offset + size };
-    return read_memory_chunk;
-}
-
 std::uint16_t Inspector::check_machine_type(const std::vector<std::uint8_t> &memory_dump) const noexcept {
     std::uint16_t ptr_size {};
     /* check if the offset is reachable in order to avoid invalid memory access */

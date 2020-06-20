@@ -8,7 +8,7 @@ Simple yet powerful memory dumper for Linux userspace processes. Suitable for 32
 - **Multithreaded dumping phase**: umd picks an optimal amount of threads before a dumping phase according to a CPU capabilities. The dumping phase is blazingly fast. Nonetheless, dumping speed may slightly vary.
   
   Example:
-  ![dumping_phase](https://user-images.githubusercontent.com/45107680/85201925-a572d580-b30b-11ea-917a-86411906c5fd.png)
+  ![dumping_phase](https://user-images.githubusercontent.com/45107680/85208354-542d0b00-b338-11ea-801f-e493de1093d9.png)
 # Usage
 Launch attach mode
 

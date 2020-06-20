@@ -158,7 +158,7 @@ Inspector* Dumper::get_inspector_obj() const noexcept {
 
 /* this method checks if the current number of bytes can be read from the current address
  * famous integer overflow bug in binary search is handled */
-bool Dumper::is_in_range(const std::uint64_t address, const std::size_t code_size) noexcept {
+bool Dumper::is_in_range(const std::uint64_t address, const std::size_t code_size) const noexcept {
     ssize_t low_idx {}, high_idx { static_cast<ssize_t>(page_addr_ranges_info.size() - 1) };
     while (low_idx <= high_idx) { 
         auto mid_idx { (low_idx + ((high_idx - low_idx) / 2))  };
@@ -326,7 +326,7 @@ void Dumper::dump_memory(const pid_t target_pid, const std::string &dump_dir) no
     auto stop { high_resolution_clock::now() };
     auto time_elapsed { duration_cast<duration<double>>(stop - start) };
     std::cout << "Time elapsed : " << time_elapsed.count() 
-              << " seconds (dumping memory from /proc/pid/mem to the buffer)" << std::endl;
+              << " seconds (dumping memory from /proc/" << target_pid << "/mem to the buffer)" << std::endl;
     std::cout << "Total dumped memory : " << total_bytes << " bytes" 
               << std::fixed << std::setprecision(2) 
               << " / " << static_cast<float>(total_bytes ) / 1000.f << " kilobytes"
@@ -334,7 +334,7 @@ void Dumper::dump_memory(const pid_t target_pid, const std::string &dump_dir) no
               << " / " << std::setprecision(6) << static_cast<float>(total_bytes) / 1000000000.f << " gigabytes" 
               << std::endl;
     auto output_files { dump_to_disk(target_pid, dump_dir) };
-    /* if nice number has been changed, reset the nice number back to the default */
+    /* if nice number has been changed, reset nice number back to default */
     if (is_single_process) {
         std::cout << "Resetting umd priority to default..." << std::endl;
         if((setpriority(PRIO_PROCESS, getpid(), 0)) == -1) {
@@ -344,5 +344,5 @@ void Dumper::dump_memory(const pid_t target_pid, const std::string &dump_dir) no
     std::cout << "The process memory has been successfully saved in " << dump_dir 
               << "\nCheck '" << output_files.first 
               << "' and the corresponding '" << output_files.second 
-              << "' that contains /proc/pid/maps of the dumped process" << std::endl;
+              << "' that contains /proc/" << target_pid << "/maps of the dumped process" << std::endl;
 }

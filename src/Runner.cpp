@@ -38,7 +38,7 @@ void Runner::run_attach_mode() noexcept {
         if (WSTOPSIG(status) == SIGSTOP) {
             mem_dumper = std::make_unique<Dumper>(target_pid);
             mem_dumper->dump_memory(target_pid, dump_dir);
-            prompt_for_investigation(mem_dumper);
+            prompt_for_inspection(mem_dumper);
             ptrace(PTRACE_DETACH, target_pid, nullptr, nullptr);
         } else {
             std::cerr << "The program has been stopped due to unexpected signal" << std::endl;
@@ -52,20 +52,22 @@ void Runner::run_inspect_mode() noexcept {
     mem_dumper = std::make_unique<Dumper>(path_to_memory_layout, path_to_dump);
     std::cout << "Inspect mode" << "\nLoaded files:\nDump: " << path_to_dump
               << "\nMemory layout: " << path_to_memory_layout << std::endl;
-    prompt_for_investigation(mem_dumper);
+    prompt_for_inspection(mem_dumper);
 }
 
-void Runner::print_memory_chunk(const std::vector<std::uint8_t> &memory_chunk, 
+void Runner::print_memory_chunk(const std::vector<std::uint8_t> &memory_dump, 
                                 std::uint64_t address, 
+                                const std::uint64_t read_start_idx,
+                                const std::uint64_t read_end_idx,
                                 const std::uint16_t ptr_size) const noexcept {
-    auto up_to_idx { ptr_size };
-    for (std::size_t i {}; i < memory_chunk.size(); i += ptr_size) {
+    std::uint64_t up_to_idx { ptr_size };
+    for (std::size_t i { read_start_idx }; i < read_end_idx; i += ptr_size) {
         std::cout << std::hex << address << std::dec << " :\t";
-        if ((i + ptr_size) > memory_chunk.size()) {
-            up_to_idx = memory_chunk.size() - i;
+        if ((i + ptr_size) > read_end_idx) {
+            up_to_idx = read_end_idx - i;
         }
-        for (auto j {i}; j < (i + up_to_idx); j++) {
-            printf("0x%x\t", memory_chunk.at(j));
+        for (auto j { i }; j < (i + up_to_idx); j++) {
+            printf("0x%x\t", memory_dump.at(j));
         }
         address += ptr_size;
         std::cout << '\n';
@@ -73,7 +75,7 @@ void Runner::print_memory_chunk(const std::vector<std::uint8_t> &memory_chunk,
 }
 
 /* main dump inspection routine */
-void Runner::prompt_for_investigation(const std::unique_ptr<Dumper> &mem_dump_obj) noexcept {
+void Runner::prompt_for_inspection(const std::unique_ptr<Dumper> &mem_dump_obj) noexcept {
     Inspector* inspector { mem_dump_obj->get_inspector_obj() };
     const std::vector<std::uint8_t> &memory_dump { mem_dump_obj->get_memory_dump() };
     unsigned char choice {};
@@ -98,12 +100,13 @@ void Runner::prompt_for_investigation(const std::unique_ptr<Dumper> &mem_dump_ob
             }
             /* Check if the provided address and amount bytes to read are in memory layout boundaries */
             if (mem_dump_obj->is_in_range(address, bytes_to_read)) {
-                auto memory_chunk { inspector->read_memory(memory_dump, inspector->get_offset(address), bytes_to_read) };
+                const std::uint64_t read_start_idx { inspector->get_offset(address) },
+                                    read_end_idx { read_start_idx + bytes_to_read };
                 std::cout << "Memory chunk that starts at address " 
                           << std::hex << address << std::dec 
                           << std::endl;
                 std::uint16_t ptr_size { inspector->check_machine_type(memory_dump) }; 
-                print_memory_chunk(memory_chunk, address, ptr_size);
+                print_memory_chunk(memory_dump, address, read_start_idx, read_end_idx, ptr_size);
             } else {
                 std::flush(std::cout);
                 std::cerr << "Cannot read " << bytes_to_read 
