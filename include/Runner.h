@@ -23,6 +23,5 @@ class Runner {
         void run_attach_mode() noexcept;
         void run_inspect_mode() noexcept;
         void prompt_for_inspection(const std::unique_ptr<Dumper>&) noexcept;
-        void inspect_chunk(std::vector<std::uint8_t>&) noexcept;
         void print_memory_chunk(const std::vector<std::uint8_t>&, std::uint64_t, const std::uint64_t, const std::uint64_t, const std::uint16_t) const noexcept;
 };
