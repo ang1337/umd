@@ -31,3 +31,19 @@ or
 # How to uninstall
     $ cd umd
     $ make clean
+# FAQ
+- Q: Why the dump contains only null bytes?
+
+    - A: Probably, the process is in a swap area, reload/interact with the process in order to load it back into RAM.
+
+
+
+- Q: Why the dump size varies between attach and inspect mode sometimes?
+
+    - A: There are situations when some pages content cannot be dumped (such as vvar or vsyscall pages range). Dump buffer is padded with null bytes in these areas. It doesn't affect the dumper correctness, but anyway may be fixed in further versions.
+
+
+
+- Q: Why the dumper is killed in dumping phase
+
+    - A: Probably, you want to dump a big process while OS doesn't have enough resources to handle the dump (low amount of available RAM, for example).

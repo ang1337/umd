@@ -86,6 +86,7 @@ void Runner::print_memory_chunk(const std::vector<std::uint8_t> &memory_dump,
 void Runner::prompt_for_inspection(const std::unique_ptr<Dumper> &mem_dump_obj) noexcept {
     Inspector* inspector { mem_dump_obj->get_inspector_obj() };
     const std::vector<std::uint8_t> &memory_dump { mem_dump_obj->get_memory_dump() };
+    std::uint16_t ptr_size { inspector->check_machine_type(memory_dump) }; 
     unsigned char choice {};
     while (true) {
         std::cout << "Would you like to inspect the dump right now? (y/n) -> ";
@@ -113,7 +114,6 @@ void Runner::prompt_for_inspection(const std::unique_ptr<Dumper> &mem_dump_obj) 
                 std::cout << "Memory chunk that starts at address " 
                           << std::hex << address << std::dec 
                           << std::endl;
-                std::uint16_t ptr_size { inspector->check_machine_type(memory_dump) }; 
                 print_memory_chunk(memory_dump, address, read_start_idx, read_end_idx, ptr_size);
             } else {
                 std::flush(std::cout);
