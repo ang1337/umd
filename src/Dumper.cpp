@@ -81,7 +81,6 @@ Dumper::Dumper(const std::string &path_to_memory_layout, const std::string &path
         std::cerr << "WARNING : not all bytes were written from disk to buffer\n" 
                   << dump_istream.gcount() << " were written to the memory dump buffer" << std::endl;
     }
-    std::cout << "Bytes loaded for real : " << dump_istream.gcount() << std::endl; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     auto stop { high_resolution_clock::now() };
     auto time_elapsed { duration_cast<duration<double>>(stop - start) };
     std::cout << "Time elapsed : " << time_elapsed.count() 
