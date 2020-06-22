@@ -5,7 +5,7 @@
 
 /* 18 is the offset inside the ELF executable header that holds 2 byte value that defines the machine type of the target binary (32 or 64 bit) */
 Inspector::Inspector(std::vector<AddressRangeInfo> &proc_maps_info) 
-    : proc_maps_info(proc_maps_info), machine_type_ehdr_offset(18) {}
+: proc_maps_info(proc_maps_info), machine_type_ehdr_offset(18) {}
 
 /* maps virtual addresses to memory dump vector offsets */
 void Inspector::map_address_space() noexcept {
