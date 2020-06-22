@@ -34,10 +34,10 @@ Dumper::Dumper(const pid_t pid) : target_pid(pid),
     /* procfs file opening error handling */
     if (!proc_maps_istream || (proc_mem_fd < 3)) {
         if (!proc_maps_istream && (proc_mem_fd > 2)){
-            std::cerr << procfs_maps_path << " opening failure" << std::endl;
+            std::cerr << "ERROR : " << procfs_maps_path << " opening failure" << std::endl;
             close(proc_mem_fd);
         } else if (proc_maps_istream && (proc_mem_fd < 3)) {
-            std::cerr << procfs_mem_path << " opening failure" 
+            std::cerr << "ERROR : " << procfs_mem_path << " opening failure"
                       << "\nTry to run umd as root" << std::endl;
             proc_maps_istream.close();
         } else {
@@ -52,12 +52,18 @@ Dumper::Dumper(const pid_t pid) : target_pid(pid),
 
 /* this constructor is called in inspect mode */
 Dumper::Dumper(const std::string &path_to_memory_layout, const std::string &path_to_dump) 
-    : page_size(getpagesize()), proc_mem_fd(0), inspector(nullptr), target_pid(0) {
+            : page_size(getpagesize()), proc_mem_fd(0), inspector(nullptr), target_pid(0) {
     
     proc_maps_istream.open(path_to_memory_layout);
     dump_istream.open(path_to_dump);
     if (!proc_maps_istream || !dump_istream) {
-        std::cerr << "ERROR : procfs file opening failure\n" << std::endl;
+        if (!proc_maps_istream && dump_istream) {
+            std::cerr << "ERROR : " << path_to_memory_layout << " opening failure" << std::endl;
+        } else if (proc_maps_istream && !dump_istream) {
+            std::cerr << "ERROR : " << path_to_dump << " opening failure" << std::endl;
+        } else {
+            std::cerr << "ERROR : " << path_to_memory_layout << " and " << path_to_dump << " opening failure" << std::endl;
+        }
         exit(EXIT_FAILURE);
     }
     evaluate_priority();
@@ -75,6 +81,7 @@ Dumper::Dumper(const std::string &path_to_memory_layout, const std::string &path
         std::cerr << "WARNING : not all bytes were written from disk to buffer\n" 
                   << dump_istream.gcount() << " were written to the memory dump buffer" << std::endl;
     }
+    std::cout << "Bytes loaded for real : " << dump_istream.gcount() << std::endl; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     auto stop { high_resolution_clock::now() };
     auto time_elapsed { duration_cast<duration<double>>(stop - start) };
     std::cout << "Time elapsed : " << time_elapsed.count() 
@@ -143,13 +150,13 @@ AddressRangeInfo Dumper::extract_address_range_info(const std::string& line) noe
     end_adrr = token.substr(hyphen_idx + 1); // extract the end address
     std::getline(line_sstream, rng_permissions, ' '); // get permissions
     std::pair<std::uint64_t, std::uint64_t> curr_addr_range { std::stoull(start_addr, nullptr, 16),
-                                                    std::stoull(end_adrr, nullptr, 16) };
+                                                              std::stoull(end_adrr, nullptr, 16) };
     auto page_amount { (curr_addr_range.second - curr_addr_range.first) / page_size };
     return { {curr_addr_range},
              0,
              0,
              {rng_permissions},
-             static_cast<unsigned>(page_amount)}; 
+             static_cast<unsigned>(page_amount) }; 
 }
 
 Inspector* Dumper::get_inspector_obj() const noexcept {
@@ -187,8 +194,7 @@ void Dumper::get_memory_layout(bool inspect_mode) noexcept {
     /* gets the virtual page range metadata */
     auto curr_addr_range_info { extract_address_range_info(line) };
     page_addr_ranges_info.push_back(curr_addr_range_info);
-    std::size_t page_count { curr_addr_range_info.page_cnt },
-                cont_page_cnt { page_count };
+    std::size_t page_count { curr_addr_range_info.page_cnt };
     /* there is no need to accumulate /proc/pid/maps output in inspect mode */
     if (!inspect_mode) {  
         proc_maps_state_output += (line + "\n");
@@ -247,7 +253,7 @@ void Dumper::thread_dump_memory_block(unsigned long dump_from_this_idx,
                             curr_cont_pages_block.second * page_size, 
                             inspector->get_offset(curr_cont_pages_block.first));
         /* total_bytes is an atomic variable in order to avoid race condition */
-        total_bytes += curr_cont_pages_block.second * page_size; 
+        total_bytes += (curr_cont_pages_block.second * page_size); 
         dump_from_this_idx++;
     }
 }
@@ -304,7 +310,7 @@ void Dumper::mt_dump_memory(std::vector<std::thread> &dump_threads,
 void Dumper::dump_memory(const pid_t target_pid, const std::string &dump_dir) noexcept { 
     /* takes an optimal amount of threads for a current hardware */
     auto thread_cnt { std::thread::hardware_concurrency() <= contiguous_pages_blocks.size() ? std::thread::hardware_concurrency() :
-                                                                                                 contiguous_pages_blocks.size() };
+                                                                                              contiguous_pages_blocks.size() };
     std::vector<std::thread> dump_threads(thread_cnt);
     unsigned long cells_per_thread { contiguous_pages_blocks.size() / thread_cnt },
                   dump_from_idx {},

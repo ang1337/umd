@@ -37,6 +37,10 @@ void Runner::run_attach_mode() noexcept {
     if (WIFSTOPPED(status)) {
         if (WSTOPSIG(status) == SIGSTOP) {
             mem_dumper = std::make_unique<Dumper>(target_pid);
+            if (!mem_dumper) {
+                std::cerr << "Object heap memory allocation failure" << std::endl;
+                exit(EXIT_FAILURE);
+            }
             mem_dumper->dump_memory(target_pid, dump_dir);
             prompt_for_inspection(mem_dumper);
             ptrace(PTRACE_DETACH, target_pid, nullptr, nullptr);
@@ -50,6 +54,10 @@ void Runner::run_attach_mode() noexcept {
 
 void Runner::run_inspect_mode() noexcept {
     mem_dumper = std::make_unique<Dumper>(path_to_memory_layout, path_to_dump);
+    if (!mem_dumper) {
+        std::cerr << "Object heap memory allocation failure" << std::endl;
+        exit(EXIT_FAILURE);
+    }
     std::cout << "Inspect mode" << "\nLoaded files:\nDump: " << path_to_dump
               << "\nMemory layout: " << path_to_memory_layout << std::endl;
     prompt_for_inspection(mem_dumper);
