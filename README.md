@@ -16,6 +16,7 @@ This is 1.1 version! umd was rewritten, new feature: JSON memory dump metadata f
 
 # Dependencies
 - GNU gcc compiler with C++ 17 support
+- CMake 3.5 and above
 - nlohmann 
 
 # Usage
