@@ -10,6 +10,9 @@ This is 1.1 version! umd was rewritten, new feature: JSON memory dump metadata f
   
   Example:
   ![image](https://user-images.githubusercontent.com/45107680/97783503-ed024b80-1ba0-11eb-8805-15dd7929066b.png)
+  
+  Example of a part of JSON memory metadata file:
+  ![image](https://user-images.githubusercontent.com/45107680/97783834-f12f6880-1ba2-11eb-93c0-5346cf52706f.png)
 
 # Dependencies
 - GNU gcc compiler with C++ 17 support
