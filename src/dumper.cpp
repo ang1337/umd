@@ -322,17 +322,17 @@ namespace umd {
                                                    cont_mem_vec_iter,
                                                    cont_mem_vec_iter + thread_pool_cycles));
         }
-        // wait for all dumping threads to join
-        for (auto &thr : dump_thread_pool) {
-            if (thr.joinable()) {
-                thr.join();
-            }
-        }
         // if the amount of memory mappings is not divided by the thread amount without remainder, dump the remained memory in the main thread
         auto thread_pool_remainder { cont_mem_rng_indices_vec.size() % thread_cnt };
         if (thread_pool_remainder) {
             auto vec_remainder_iter { cont_mem_rng_indices_vec.cend() - thread_pool_remainder };
             dump_thread(procmem_fd, mem_map_vec, dump_buffer, vec_remainder_iter, vec_remainder_iter + thread_pool_remainder); 
+        }
+        // wait for all dumping threads to join
+        for (auto &thr : dump_thread_pool) {
+            if (thr.joinable()) {
+                thr.join();
+            }
         }
         // dump the registers and append it to the memory dump
         struct user_regs_struct regs {};
