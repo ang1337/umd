@@ -67,11 +67,6 @@ namespace umd {
                     std::tuple<memory_vec_t, unsigned long, unsigned long> parsed_json_data;
                     json loaded_json;
                     std::vector<uint8_t> dump_buffer;
-                    static inline bool inspection_loop_run { true };
-                    // SIGINT signal handler
-                    static inline void dump_inspection_mainloop_signal_handler(int sig) {
-                        inspection_loop_run = false;
-                    }
                     void extract_dumped_regs();
                     void generate_mem_vec_from_json();
             };

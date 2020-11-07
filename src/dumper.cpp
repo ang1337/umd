@@ -85,12 +85,9 @@ namespace umd {
 
     // Main inspection prompt loop
     void Dumper::DumpInspector::dump_inspection_mainloop() const {
-        // setup the SIGINT handler for the sane CTRL+C loop abortion without error exit code
-        signal(SIGINT, Dumper::DumpInspector::dump_inspection_mainloop_signal_handler);
         const auto &mem_map_vec { std::get<TUPLE_MEM_MAP_IDX>(parsed_json_data) };
-        inspection_loop_run = true;
         std::cout << "Press Ctrl+C to break the inspection loop after the next iteration" << std::endl;
-        while (inspection_loop_run) {
+        for (;;) {
             std::string address_str {};
             unsigned long bytes_to_read {};
             process_input<std::string>(address_str, "Enter the address to read from: ");
@@ -111,7 +108,7 @@ namespace umd {
                     }
                     printf("0x%.2x ", curr_dump_buff_subvec.at(curr_byte_idx));
                     if (!((curr_byte_idx + 1) % sizeof(void *))) {
-                        std::cout << std::endl;
+                        std::cout << '\n';
                     }
                 }
                 // skip unnecessary blank line
