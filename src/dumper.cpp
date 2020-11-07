@@ -86,7 +86,7 @@ namespace umd {
     // Main inspection prompt loop
     void Dumper::DumpInspector::dump_inspection_mainloop() const {
         const auto &mem_map_vec { std::get<TUPLE_MEM_MAP_IDX>(parsed_json_data) };
-        std::cout << "Press Ctrl+C to break the inspection loop after the next iteration" << std::endl;
+        std::cout << "Press Ctrl+C to break from the inspection loop" << std::endl;
         for (;;) {
             std::string address_str {};
             unsigned long bytes_to_read {};
