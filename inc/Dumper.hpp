@@ -49,8 +49,10 @@ namespace umd {
         public:
             Dumper(const pid_t target_pid);
             ~Dumper();
-            Dumper(const Dumper &) = delete;
-            Dumper& operator = (const Dumper &) = delete;
+            Dumper(const Dumper&) = delete;
+            Dumper& operator = (const Dumper&) = delete;
+            Dumper& operator = (Dumper&&) noexcept = default;
+            Dumper(Dumper&&) noexcept = default;
             const memory_metadata_map dump_memory();
             void dump_to_disk(const memory_metadata_map &mem_map, const std::string &dump_path);
             std::optional<byte_vector> inspect_memory(const memory_metadata_map& mem_metadata_map, const unsigned long address, const unsigned long size) const;
