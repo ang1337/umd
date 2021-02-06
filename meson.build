@@ -1,6 +1,6 @@
 project('umd', 'cpp', license : 'GPL')
 
-add_project_arguments(['-std=c++17'], language : 'cpp')
+add_project_arguments(['-std=c++17', '-O3'], language : 'cpp')
 
 inc = include_directories('inc')
 
