@@ -1,4 +1,4 @@
-//#include "inc/Dumper.hpp"
+/* compiled with: g++ api_usage_example.cpp -lumd -lpthread -std=c++17 -O3 -o api_usage_example */
 #include <umd/Dumper.hpp>
 #include <iostream>
 #include <sys/types.h>
