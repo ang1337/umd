@@ -11,7 +11,6 @@
 
 // API user can print out the memory metadata map in a nice readable format via cout
 std::ostream& operator << (std::ostream &os, const umd::memory_metadata_map &mem_map) {
-    unsigned mem_region_cnt {};
     auto print_mem_flags = [](std::ostream &os, const umd::MemoryRegion &curr_mem_region) {
         for (const auto flag : curr_mem_region.flags) {
             os << flag;
