@@ -6,13 +6,14 @@ Simple yet powerful memory dumping library for Linux userspace processes.
 
 # Dependencies
 - GNU gcc compiler with C++ 17 support
-- Make
+- Python 3
+- Meson build system
 
 # How to install
 ```
 git clone https://github.com/ang1337/umd.git
 cd umd
-make
+./install.sh
 ```
 
 # Usage
