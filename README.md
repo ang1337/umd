@@ -17,5 +17,5 @@ cd umd
 ```
 
 # Usage
-See ```api_usage_example.cpp``` file that uses pretty much all the API exposed for external umd library usage.
+See ```api_usage_example.cpp``` file that uses pretty much all the API exposed for an external umd library usage. Compile the program that uses umd library with ```-lumd```, ```-lpthread``` and ```-std=c++17``` flags.
        
